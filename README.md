@@ -1,6 +1,6 @@
 # Blusalt Terminal Management System
 
-This repository contains automated tests for the Blusalt Core Banking App, developed using Cypress. 
+This repository contains automated tests for the Blusalt Terminal Management Admin App, developed using Cypress. 
 
 :computer: **Prerequisites**
 
