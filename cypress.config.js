@@ -40,6 +40,7 @@ module.exports = defineConfig({
     },
     specPattern:["cypress/e2e/features/*.feature",'cypress/e2e/**/*.cy.{js,jsx,ts,tsx}'],
     chromeWebSecurity: false,
-    baseUrl:"https://dev-tms-admin.blusalt.net/login"
+    baseUrl:"https://dev-tms-admin.blusalt.net/login",
+    supportFile: "cypress/support/e2e.js"
   }
 });
