@@ -7,6 +7,7 @@ const createEsbuildPlugin = require("@badeball/cypress-cucumber-preprocessor/esb
 module.exports = defineConfig({
   viewportWidth: 1280,
   viewportHeight: 800,
+  video: true,
   reporter: 'cypress-mochawesome-reporter',
   reporterOptions: {
     charts: true,
@@ -15,6 +16,9 @@ module.exports = defineConfig({
     reportFilename: 'tms_admin_report',
     inlineAssets: true,
     saveAllAttempts: false,
+  },
+  env:{
+    MAILOSAUR_API_KEY: "ja51ubpE5j9pYfSeyPG4Q0slLfLLMBIr",
   },
   e2e: {
     async setupNodeEvents(on, config) {

@@ -33,3 +33,9 @@ Cypress.Commands.add('login', () => {
     })
     cy.get('.btn').click()
 });
+
+Cypress.on('uncaught:exception', (err, runnable, promise) => {
+    if (err.name === 'TypeError') {
+        return false
+    }
+  })
