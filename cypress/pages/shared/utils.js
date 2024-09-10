@@ -18,17 +18,34 @@ export class Utility{
     }
 
     uploadFile(){
-        const documentPath = 'images.jpeg'
+        const documentPath = 'image.png'
         cy.get('input[type=file]').invoke('show').attachFile(documentPath)
     }
 
-    getEmailMessage(emailId){
+    uploadDocument(name_of_doc){
+        const documentPath = 'image.png'
+        cy.get(`#${name_of_doc}`).invoke('show').attachFile(documentPath)
+        cy.wait(500)
+    }
+
+    getLinkFromEmail(emailId){
         cy.mailosaurGetMessage("vph0lgs0", {
             sentTo:emailId+"@vph0lgs0.mailosaur.net"
         }, {
             timeout: 60000
         }).then((email) => {
-            cy.log(email.subject)
+            expect(email.subject).to.equal("INVITE")
+            var inviteLink = email.html.links[1].href
+            Cypress.env('inviteLink', inviteLink);
         });
+    }
+
+    visitInviteLink(){
+        const inviteLink = Cypress.env('inviteLink');
+        if (inviteLink) {
+            cy.visit(inviteLink);
+        } else {
+            throw new Error('Invite link is not set.');
+        }
     }
 }

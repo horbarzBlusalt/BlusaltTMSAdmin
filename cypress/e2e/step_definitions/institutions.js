@@ -4,12 +4,18 @@ import {Utility} from "../../pages/shared/utils"
 util = new Utility()
 
 const instPage = new institutionsPage()
+
+//Institution details
 const institutionInfoToView = 'aas'
 const bizName = "Adekunle and Sons"
 const phoneNumber = "09012345678"
 const businessEmail = "xyz@yopmail.com"
 const addressOne = "Address One"
 const addressTwo = "Address Two"
+
+//Sub Institution details
+const firstName = "Akpan"
+const lastName = "Etikudo"
 
 
 
@@ -33,7 +39,7 @@ When('users click on the add new institution button', () => {
 })
 
 When('users enter institution profile details', () => {
-    instPage.enterInstitutionProfileDetails(bizName,phoneNumber, businessEmail, addressOne, addressTwo)
+    instPage.enterInstitutionProfileDetails(bizName, phoneNumber, businessEmail, addressOne, addressTwo)
 })
 
 When('users click on save button', () => {
@@ -90,4 +96,20 @@ When('users click the send invite button', () => {
 
 Then('{string} subinstitution users are invited successfully', (instEmail) => {
     instPage.verifySubInstitutionInvite(instEmail)
+})
+
+When('users visit the generated onboarding link', () => {
+    instPage.visitOnboardingLink()
+})
+
+When('users provides matching passwords', () => {
+    instPage.enterMatchingPasswords()
+})
+
+When('users users enter basic information', () => {
+    instPage.enterRepresentativeBasicInformation(firstName, lastName, phoneNumber)
+})
+
+When('users enter one time password', () => {
+    instPage.enterOTP()
 })
