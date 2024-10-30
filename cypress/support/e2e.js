@@ -17,6 +17,8 @@
 import './commands';
 require("cypress-xpath");
 import "cypress-mailosaur";
+import 'cypress-file-upload';
+
 
 
 // Alternatively you can use CommonJS syntax:

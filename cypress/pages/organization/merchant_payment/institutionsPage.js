@@ -1,6 +1,6 @@
 ///<reference types="cypress"/>
-import { util } from "chai"
 import { Utility } from "../../shared/utils"
+import { faker } from '@faker-js/faker';
 
 utilities = new Utility()
 
@@ -15,20 +15,23 @@ export class institutionsPage{
         tableColumnThree: () => cy.get('.table__head > .pointer > :nth-child(3)'),
         tableColumnFour: () => cy.get('.table__head > .pointer > :nth-child(4)'),
         tableColumnFive: () => cy.get('.table__head > .pointer > :nth-child(5)'),
-        sendInviteBtn: () => cy.get('.justify-content-sm-end > :nth-child(3) > :nth-child(1)'),
-        addInstitutionBtn: () => cy.get('.justify-content-sm-end > :nth-child(3) > :nth-child(2)'),
+        sendInviteBtn: () => cy.contains('Send Invite'),
+        addInstitutionBtn: () => cy.contains('Add New Institution'),
         institutionEmailInput: () => cy.get('#email'),
         institutionNameInput: () => cy.get('#institutionName'),
         submitInviteBtn: () => cy.get('.flex__center > .btn--secondary'),
         notificationMessage:() => cy.get('.Toastify__toast-body'),
-        institutionProfileNameInput: () => cy.get('#name'),
+        firstNameInput: () => cy.get('#adminFirstName'),
+        lastNameInput: () => cy.get('#adminLastName'),
+        adminEmailInput: () => cy.get('#adminEmail'),
         institutionSectorSelector:() => cy.get('#sector'),
         institutionPhoneNumberInput: () => cy.get('.react-tel-input'),
         institutionProfileEmailInput: () => cy.get('#bizEmail'),
         businessCityInput: () => cy.get('#city'),
         addressLineOneInput: () => cy.get('#addressLine1'),
         addressLineTwoInput: () => cy.get('#addressLine2'),
-        saveAndContinueBtn: () => cy.get('.btn--secondary'),
+        saveAndContinueBtn: () => cy.contains('Save & Continue'),
+        addDirBtn: () => cy.contains('Add Director'),
         supportEmailInput: () => cy.get('#supportEmail'),
         disputeEmailInput: () => cy.get('#disputeEmail'),
         busInstagramLinkInput: () => cy.get('#instagramLink'),
@@ -36,7 +39,7 @@ export class institutionsPage{
         busTwitterLinkInput: () => cy.get('#twitterLink'),
         institutionSendInvite: () => cy.get('.justify-content-sm-end > div.d-flex > :nth-child(1)'),
         loginBtn: () => cy.get('.btn--primary'),
-        institutionName: () => cy.get('.text--lg'),
+        businessName: () => cy.get('#name'),
         institutionEmail: () => cy.get('.text--sm'),
         institutionStatus: () => cy.get('.text--sm'),
         institutionDate: () => cy.get('.text--sm'),
@@ -97,23 +100,29 @@ export class institutionsPage{
         utilities.getEmailMessage(instEmail)
     }
 
-    enterInstitutionProfileDetails(name, phoneNumber, businessEmail, addressOne, addressTwo){
-        cy.contains("Institution Profile Information")
-        cy.contains("Institution Name")
-        cy.contains("Business Sector")
-        cy.contains('Business Size')
-        this.elements.institutionProfileNameInput().clear().type(name)
-        cy.get('#react-select-2-placeholder').click({force: true})
-        cy.get('#react-select-2-option-0').click({force: true})
-        cy.get('#react-select-3-placeholder').click({force: true})
-        cy.get('#react-select-3-option-0').click({force: true})
+    enterAdminProfileDetails(firstName, lastName, email, phoneNumber){
+        cy.contains("Admin Contact")
+        this.elements.firstNameInput().scrollIntoView().type(firstName, {force:true});
+        this.elements.lastNameInput().scrollIntoView().type(lastName, {force:true});
+        this.elements.adminEmailInput().scrollIntoView().type(email+utilities.getRandomNumber()+'@vph0lgs0.mailosaur.net', {force:true});
         this.elements.phoneNumberInput().type(phoneNumber)
-        this.elements.institutionProfileEmailInput().type(businessEmail)
-        cy.get('#react-select-4-placeholder').click({force: true})
-        cy.get('#react-select-4-option-0').click({force: true})
+        this.elements.saveAndContinueBtn().click()
+    }
+
+    enterBusinessProfileDetails(bizName, phoneNumber, businessEmail, addressOne, addressTwo){
+        cy.contains("Business Profile Information")
+        cy.get(':nth-child(1) > .form-group > .flex__start > #name').scrollIntoView().type(bizName, {force:true});
         cy.get('#react-select-5-placeholder').click({force: true})
         cy.get('#react-select-5-option-0').click({force: true})
-        this.elements.businessCityInput().type('Lekki')
+        cy.contains('Choose business emplyee Size').click({force: true})
+        cy.get('#react-select-6-option-0').click({force: true})
+        this.elements.phoneNumberInput().type(phoneNumber)
+        this.elements.institutionProfileEmailInput().type(businessEmail+utilities.getRandomNumber()+'@yopmail.com')
+        cy.get('#react-select-7-placeholder').click({force: true})
+        cy.get('#react-select-7-option-0').click({force: true})
+        cy.get('#react-select-8-placeholder').click({force: true})
+        cy.get('#react-select-8-option-0').click({force: true})
+        this.elements.businessCityInput().type('Lekki Phase 1')
         this.elements.addressLineOneInput().type(addressOne)
         this.elements.addressLineTwoInput().type(addressTwo)
         this.elements.saveAndContinueBtn().click()
@@ -135,55 +144,104 @@ export class institutionsPage{
     }
 
     uploadBusinessDocuments(){
-        cy.get('#businessRegNo').type('RN34567890')
-        utilities.uploadDocuments("business-registration")
+        cy.get('#businessRegNo').type('RN3'+utilities.getRandomNumber())
+        utilities.uploadDocument("business-registration")
         cy.get('#taxIdNo').type('TIN'+utilities.getRandomNumber())
-        utilities.uploadDocuments( "tax-identification")
-        utilities.uploadDocuments("certificate-of-incorporation")
-        utilities.uploadDocuments("memom-mart")
-        utilities.uploadDocuments("proof-of-address")
+        utilities.uploadDocument( "tax-identification")
+        cy.wait(100)
+        utilities.uploadDocument("certificate-of-incorporation")
+        utilities.uploadDocument("memom-mart")
+        utilities.uploadDocument("proof-of-address")
+        cy.wait(8000)
+        cy.get('.Toastify__toast-body > :nth-child(2)').should('have.text', 'File uploaded successfully');
         this.clickSaveContinue()
     }
 
-    enterBusinessContact(firstName, lastName, country){
-        cy.get('bizConFirstName').type(firstName)
-        cy.get('bizConLastName').type(lastName)
-        cy.get('bizConEmail').type(firstName+utilities.getRandomNumber()+"@vph0lgs0.mailosaur.net")
+    enterBusinessContactInformation(firstName, lastName, country){
+        cy.get('#bizConFirstName').scrollIntoView().type(firstName, {force:true})
+        cy.get('#bizConLastName').scrollIntoView().type(lastName, {force:true})
+        cy.get('#bizConEmail').type(firstName+utilities.getRandomNumber()+"@vph0lgs0.mailosaur.net")
         this.elements.phoneNumberInput().type('08123456780')
         cy.xpath("//input[@name='bizConDateOfBirth']").type('12/01/1990')
-        cy.get('#react-select-6-placeholder').type("Nigeria {enter}")
-        // cy.get('#react-select-6-placeholder').type("Nigeria {enter}")
-        //cy.get('#react-select-6-option-0').click({force: true})
+        cy.get('.text--lg').click()
+        cy.contains('Enter the country').click({force:true})
+        cy.get('#react-select-9-option-0').click({force: true})
+        cy.get('#react-select-10-placeholder').click({force:true})
+        cy.get('#react-select-10-option-0').click({force: true})
+        cy.get('#bizConCity').type('Yaba')
+        cy.get('#bizConAddressLine1').type('21 Adewale Street')
+        cy.get('#bizConAddressLine2').type('22 Adesanya Street')
+        this.clickSaveContinue()
+    }
 
+    enterDirectorInformation(firstName,lastName,dirEmail){
+        cy.get('#dirFirstName').type(firstName, {force:true})
+        cy.get('#dirLastName').type(lastName, {force:true})
+        cy.get('#dirEmail').type(dirEmail+utilities.getRandomNumber()+'@yopmail.com', {force:true})
+        cy.xpath("//input[@name='dirDateOfBirth']").type('12/01/1990')
+        this.elements.phoneNumberInput().type('08123456780')
+        utilities.uploadDocument( "director-id")
+        cy.get('#react-select-11-placeholder').click({force:true})
+        cy.get('#react-select-11-option-0').click({force: true})
+        cy.get('#dirIdentityNo').type('SBIN'+utilities.getRandomNumber())
+        cy.xpath("//input[@name='dirIdentityIssuedDate']").type('12/01/2022')
+        cy.xpath("//input[@name='dirIdentityExpiredDate']").type('12/01/2028')
+        cy.get('#react-select-12-placeholder').click({force:true})
+        cy.get('#react-select-12-option-0').click({force: true})
+        cy.get('#react-select-13-placeholder').click({force:true})
+        cy.get('#react-select-13-option-0').click({force: true})
+        cy.get('#dirCity').type('Yaba')
+        cy.get('#dirAddressLine1').type('21 Adewale Street')
+        cy.get('#dirAddressLine2').type('22 Adesanya Street')
+        cy.wait(2000)
+        cy.get('.Toastify__toast-body > :nth-child(2)').should('have.text', 'File uploaded successfully');
+        this.elements.addDirBtn().click()
+        this.elements.saveAndContinueBtn().click()
+    }
+
+    enterCustomDomainDetails(){
+        cy.contains('Custom Domain')
+        cy.get('.col-md-7 > :nth-child(2) > div.d-flex > .btn--secondary').contains('Add Institution').click()
+        cy.get('#institutionDomainName').scrollIntoView().type('https://definance'+utilities.getRandomNumber()+'.io', {force:true})
+        cy.get('#merchantDomainName').scrollIntoView().type('https://automerchant'+utilities.getRandomNumber()+'.io', {force:true})
+        cy.get('.col-md-7 > :nth-child(2) > div.d-flex > .btn--secondary').contains('Add Institution').click()
     }
 
     viewInstitutionInfo(nameOfInstitution){
-        cy.contains(nameOfInstitution).click()
+        if(nameOfInstitution == undefined){
+            cy.get('table tr:nth-child(2)').click();
+
+        }else{
+            cy.get('#searchQuery').type(nameOfInstitution + " {enter}")
+            cy.get('table tr:nth-child(2)').click();
+
+        }
         cy.get('div.header__badge > .active').contains('Institution Info')
-        cy.xpath("//span[@class='text-uppercase text--grey'][normalize-space()='Transaction value']")
-        cy.xpath("//span[contains(@class,'text-uppercase text--grey')][normalize-space()='Commission Value']")
-        cy.xpath("//span[contains(@class,'text-uppercase text--grey')][normalize-space()='Sub-institution']")
-        cy.xpath("//span[contains(@class,'text-uppercase text--grey')][normalize-space()='terminals']")
-        cy.get('.col-lg-5 > .bg--white > .heading-3').contains('Transaction Status')
-        cy.get('.col-lg-4 > .bg--white > .heading-3').contains('Chargeback Status')
-        cy.get('.col-lg-3 > .bg--white > .heading-3').contains('Charges Distribution')
-        cy.get('.col-md-5 > :nth-child(1) > .text-uppercase').contains('Institution name')
-        cy.get(':nth-child(2) > .text-uppercase').contains('Institution code')
-        cy.get(':nth-child(3) > .text-uppercase').contains('sector')
-        cy.get(':nth-child(4) > .text-uppercase').contains('email address')
-        cy.get(':nth-child(5) > .text-uppercase').contains('Terminal prefix')
-        cy.get(':nth-child(6) > .text-uppercase').contains('country')
-        cy.get(':nth-child(7) > .text-uppercase').contains('address')
-        cy.get(':nth-child(8) > .text-uppercase').contains('Institution Domain')
-        cy.get(':nth-child(9) > .text-uppercase').contains('Merchant Domain')
-        cy.get(':nth-child(10) > .text-uppercase').contains('Status')
+        cy.contains('Transaction value')
+        cy.contains('Commission Value')
+        cy.contains('Sub-institution')
+        cy.contains('terminals')
+        cy.contains('Transaction Status')
+        cy.contains('Chargeback Status')
+        cy.contains('Charges Distribution')
+        //Profile Information
+        cy.contains('Institution name')
+        cy.contains('Institution code')
+        cy.contains('sector')
+        cy.contains('email address')
+        cy.contains('Terminal prefix')
+        cy.contains('country')
+        cy.contains('address')
+        cy.contains('Institution Domain')
+        cy.contains('Merchant Domain')
+        cy.contains('Status')
     }
 
     viewInstitutionSubInstitutions(){
         cy.get('#route-1-tab').click()
     }
 
-    clickSendSubInstitutionInvite(){
+    clickSendSubInstitutionInvite(){k
         cy.wait(3000)
         this.elements.institutionSendInvite().click()
     }
@@ -244,5 +302,9 @@ export class institutionsPage{
     }
     viewInstitutionUsers(){
         cy.get('#route-6-tab').click()
+    }
+    
+    viewInstitutionBranding(){
+        cy.get('#route-7-tab').click()
     }
 }

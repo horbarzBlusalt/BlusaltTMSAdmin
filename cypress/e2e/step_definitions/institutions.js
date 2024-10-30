@@ -1,21 +1,29 @@
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
 import {institutionsPage} from "../../pages/index";
 import {Utility} from "../../pages/shared/utils"
-util = new Utility()
+import { faker } from '@faker-js/faker';
+
+utilities = new Utility()
 
 const instPage = new institutionsPage()
 
 //Institution details
-const institutionInfoToView = 'aas'
-const bizName = "Adekunle and Sons"
-const phoneNumber = "09012345678"
-const businessEmail = "xyz@yopmail.com"
-const addressOne = "Address One"
-const addressTwo = "Address Two"
+const institutionInfoToView = 'rave'
+const bizName = faker.company.name()
+const phoneNumber = faker.phone.number()
+const businessEmail = "abc"
+const addressOne = faker.address.streetAddress()
+const addressTwo = faker.address.streetAddress()
 
 //Sub Institution details
-const firstName = "Akpan"
-const lastName = "Etikudo"
+const firstName = faker.name.firstName()
+const lastName = faker.name.lastName()
+
+//Director Details
+const directorFirstName = faker.name.firstName()
+const directorLastName = faker.name.lastName()
+
+const country = "Nigeria"
 
 
 
@@ -26,6 +34,7 @@ Given('users are successfully logged in', () => {
 })
 
 When('users navigate into organization module', () => {
+    cy.wait(1000)
     instPage.clickSideBarToggle()
     instPage.clickOrganizationSideBar()
 })
@@ -38,8 +47,12 @@ When('users click on the add new institution button', () => {
     instPage.clickAddInstitution()
 })
 
-When('users enter institution profile details', () => {
-    instPage.enterInstitutionProfileDetails(bizName, phoneNumber, businessEmail, addressOne, addressTwo)
+When('users enter the admin details', () => {
+    instPage.enterAdminProfileDetails(firstName,lastName, businessEmail,phoneNumber)
+})
+
+When('users enter business profile details', () => {
+    instPage.enterBusinessProfileDetails(bizName, phoneNumber, businessEmail, addressOne, addressTwo)
 })
 
 When('users click on save button', () => {
@@ -48,6 +61,14 @@ When('users click on save button', () => {
 
 Then('navigate to support contact form', () => {
     instPage.enterSupportContactDetails()
+})
+
+Then('upload business documents', () =>{
+    instPage.uploadBusinessDocuments()
+})
+
+Then('enter custom domain details', () => {
+    instPage.enterCustomDomainDetails()
 })
 
 When('users click on send invite', () => {
@@ -62,8 +83,12 @@ Then('users can send {string} institution invite successfully', (instEmail) =>{
     instPage.verifyInstitutionInvite(instEmail)
 })
 
-When('users click into an institution', () => {
+When('view specific institution', () => {
     instPage.viewInstitutionInfo(institutionInfoToView)
+})
+
+When('users click into an institution', () => {
+    instPage.viewInstitutionInfo()
 })
 
 When('users view subinstitution', () => {
@@ -84,6 +109,18 @@ When('users view institutions transactions', () => {
 
 When('users view institutions route', () => {
     instPage.viewInstitutionRoute()
+})
+
+When('users view institutions branding', () => {
+    instPage.viewInstitutionBranding()
+})
+
+When('users enter business contact information', () => {
+    instPage.enterBusinessContactInformation(firstName, lastName, country)
+})
+
+When('users enter director information', () => {
+    instPage.enterDirectorInformation(directorFirstName, directorLastName, businessEmail)
 })
 
 When('users view institutions users', () => {

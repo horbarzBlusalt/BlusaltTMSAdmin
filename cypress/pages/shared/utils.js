@@ -45,7 +45,7 @@ export class Utility{
         if (inviteLink) {
             cy.visit(inviteLink);
         } else {
-            throw new Error('Invite link is not set.');
+            throw new Error('Invite link was not sent.');
         }
     }
 }
