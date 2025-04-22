@@ -19,13 +19,15 @@ const addressTwo = faker.address.streetAddress()
 const firstName = faker.name.firstName()
 const lastName = faker.name.lastName()
 
+const instEmail = faker.name.firstName()
+
 //Director Details
 const directorFirstName = faker.name.firstName()
 const directorLastName = faker.name.lastName()
 
 const country = "Nigeria"
 
-
+const representativePhoneNum = "8172882930"
 
 Given('users are successfully logged in', () => {
     //cy.fixture('userData.json').as('users')
@@ -51,8 +53,8 @@ When('users enter the admin details', () => {
     instPage.enterAdminProfileDetails(firstName,lastName, businessEmail,phoneNumber)
 })
 
-When('users enter business profile details', () => {
-    instPage.enterBusinessProfileDetails(bizName, phoneNumber, businessEmail, addressOne, addressTwo)
+When('users enter business profile details during {string}', (onboarding) => {
+    instPage.enterBusinessProfileDetails(bizName, phoneNumber, businessEmail, addressOne, addressTwo, onboarding)
 })
 
 When('users click on save button', () => {
@@ -67,19 +69,19 @@ Then('upload business documents', () =>{
     instPage.uploadBusinessDocuments()
 })
 
-Then('enter custom domain details', () => {
-    instPage.enterCustomDomainDetails()
+Then('enter custom domain details during {string}', (onboarding) => {
+    instPage.enterCustomDomainDetails(onboarding)
 })
 
 When('users click on send invite', () => {
     instPage.clickSendInvite()
 })
 
-When('users enter {string} {string} and sends invite', (instName, instEmail) => {
-    instPage.enterInstitutionDetails(instName,instEmail)
+When('users enter institution details and sends invite', () => {
+    instPage.enterInstitutionDetails(bizName,instEmail)
 })
 
-Then('users can send {string} institution invite successfully', (instEmail) =>{
+Then('users can send institution invite successfully', () =>{
     instPage.verifyInstitutionInvite(instEmail)
 })
 
@@ -119,8 +121,8 @@ When('users enter business contact information', () => {
     instPage.enterBusinessContactInformation(firstName, lastName, country)
 })
 
-When('users enter director information', () => {
-    instPage.enterDirectorInformation(directorFirstName, directorLastName, businessEmail)
+When('users enter director information during {string}', (onboarding) => {
+    instPage.enterDirectorInformation(directorFirstName, directorLastName, businessEmail, false, onboarding)
 })
 
 When('users view institutions users', () => {
@@ -144,9 +146,25 @@ When('users provides matching passwords', () => {
 })
 
 When('users users enter basic information', () => {
-    instPage.enterRepresentativeBasicInformation(firstName, lastName, phoneNumber)
+    instPage.enterRepresentativeBasicInformation(firstName, lastName, representativePhoneNum)
 })
 
 When('users enter one time password', () => {
     instPage.enterOTP()
+})
+
+When('preferred services is selected', () => {
+    instPage.selectPreferredServices()
+})
+
+Then('verify the application page', () => {
+    instPage.verifyApplicationPage()
+})
+
+When('user attempts to edit application', () => {
+    instPage.editApplication()
+})
+
+Then('user submits application', () => {
+    instPage.submitApplication()
 })

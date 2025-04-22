@@ -32,6 +32,7 @@ export class institutionsPage{
         addressLineTwoInput: () => cy.get('#addressLine2'),
         saveAndContinueBtn: () => cy.contains('Save & Continue'),
         addDirBtn: () => cy.contains('Add Director'),
+        addNewDirBtn: () => cy.contains('Add Another Director'), 
         supportEmailInput: () => cy.get('#supportEmail'),
         disputeEmailInput: () => cy.get('#disputeEmail'),
         busInstagramLinkInput: () => cy.get('#instagramLink'),
@@ -40,6 +41,13 @@ export class institutionsPage{
         institutionSendInvite: () => cy.get('.justify-content-sm-end > div.d-flex > :nth-child(1)'),
         loginBtn: () => cy.get('.btn--primary'),
         businessName: () => cy.get('#name'),
+        businessContactFirstName: () => cy.get('#bizConFirstName'),
+        businessContactLastName: () => cy.get('#bizConLastName'),
+        businessContactEmail: () => cy.get('#bizConEmail'),
+        businessAddressOne: () => cy.get('#bizConAddressLine1'),
+        businessAddressTwo: () => cy.get('#bizConAddressLine2'),
+        businessCity: () => cy.get('#bizConCity'),
+        institutionName: () => cy.get('.text--lg'),
         institutionEmail: () => cy.get('.text--sm'),
         institutionStatus: () => cy.get('.text--sm'),
         institutionDate: () => cy.get('.text--sm'),
@@ -81,8 +89,7 @@ export class institutionsPage{
 
     clickSendInvite(){
         cy.wait(3000)
-        this.elements.sendInviteBtn().click()
-        
+        this.elements.sendInviteBtn().click() 
     }
 
     clickAddInstitution(){
@@ -91,37 +98,46 @@ export class institutionsPage{
 
     enterInstitutionDetails(instName, instEmail){
         this.elements.institutionNameInput().type(instName)
-        this.elements.institutionEmailInput().type(instEmail+"@vph0lgs0.mailosaur.net")
+        this.elements.institutionEmailInput().type(instEmail+Cypress.env('EMAIL_DOMAIN'))
         this.elements.submitInviteBtn().click()
     }
 
     verifyInstitutionInvite(instEmail){
         this.elements.notificationMessage().contains('Invite Sent Successfully')
-        utilities.getEmailMessage(instEmail)
+        utilities.getLinkFromEmail(instEmail)
     }
 
     enterAdminProfileDetails(firstName, lastName, email, phoneNumber){
         cy.contains("Admin Contact")
         this.elements.firstNameInput().scrollIntoView().type(firstName, {force:true});
         this.elements.lastNameInput().scrollIntoView().type(lastName, {force:true});
-        this.elements.adminEmailInput().scrollIntoView().type(email+utilities.getRandomNumber()+'@vph0lgs0.mailosaur.net', {force:true});
+        this.elements.adminEmailInput().scrollIntoView().type(email+utilities.getRandomNumber()+Cypress.env('EMAIL_DOMAIN'), {force:true});
         this.elements.phoneNumberInput().type(phoneNumber)
         this.elements.saveAndContinueBtn().click()
     }
 
-    enterBusinessProfileDetails(bizName, phoneNumber, businessEmail, addressOne, addressTwo){
-        cy.contains("Business Profile Information")
-        cy.get(':nth-child(1) > .form-group > .flex__start > #name').scrollIntoView().type(bizName, {force:true});
-        cy.get('#react-select-5-placeholder').click({force: true})
-        cy.get('#react-select-5-option-0').click({force: true})
-        cy.contains('Choose business emplyee Size').click({force: true})
-        cy.get('#react-select-6-option-0').click({force: true})
+    enterBusinessProfileDetails(bizName, phoneNumber, businessEmail, addressOne, addressTwo, onboarding){
+        var isOnboardingInvite = (onboarding === "true" )
+        
+       
+        cy.get(':nth-child(1) > .form-group > .flex__start > #name').then(($bizNameInput) => {
+            if(!$bizNameInput.val()){
+                cy.wrap($bizNameInput).scrollIntoView().type(bizName, {force:true})
+            }else{
+                cy.log('Input field not empty')
+            }
+        })
+        if(isOnboardingInvite){
+            utilities.selectDropdown('Select Business Sector',0)
+        }
+        if(!isOnboardingInvite){
+            utilities.selectDropdown('Select',0)
+        }
+        utilities.selectDropdown('Choose business employee Size',0)
         this.elements.phoneNumberInput().type(phoneNumber)
         this.elements.institutionProfileEmailInput().type(businessEmail+utilities.getRandomNumber()+'@yopmail.com')
-        cy.get('#react-select-7-placeholder').click({force: true})
-        cy.get('#react-select-7-option-0').click({force: true})
-        cy.get('#react-select-8-placeholder').click({force: true})
-        cy.get('#react-select-8-option-0').click({force: true})
+        utilities.selectDropdown('Enter the country',0)
+        utilities.selectDropdown('Enter the state',0)
         this.elements.businessCityInput().type('Lekki Phase 1')
         this.elements.addressLineOneInput().type(addressOne)
         this.elements.addressLineTwoInput().type(addressTwo)
@@ -143,7 +159,35 @@ export class institutionsPage{
         this.clickSaveContinue()
     }
 
+    uploadAndVerifyDocument(documentType){
+        utilities.uploadDocument(documentType);
+        // Retry mechanism - check for success message within specified time
+        cy.get('.Toastify__toast--success', { timeout: 15000 })
+            .then(($message) => {
+                if($message.text() !== 'File uploaded successfully'){
+                    // Retry upload if the message isn't successful
+                    utilities.uploadDocument(documentType);
+                    throw new Error('Retrying upload for ' + documentType);
+                }else{
+                    cy.log(documentType + ' uploaded successfully');
+                }
+            })
+            // .then(() => {
+            //     cy.log(documentType + ' uploaded successfully');
+            // });
+    }
+
     uploadBusinessDocuments(){
+        // cy.get('#businessRegNo').type('RN3' + utilities.getRandomNumber());
+        // this.uploadAndVerifyDocument("business-registration");
+        // cy.get('#taxIdNo').type('TIN' + utilities.getRandomNumber());
+        // this.uploadAndVerifyDocument("tax-identification");
+        // this.uploadAndVerifyDocument("certificate-of-incorporation");
+        // this.uploadAndVerifyDocument("memom-mart");
+        // this.uploadAndVerifyDocument("proof-of-address");
+        
+        // this.clickSaveContinue();
+        
         cy.get('#businessRegNo').type('RN3'+utilities.getRandomNumber())
         utilities.uploadDocument("business-registration")
         cy.get('#taxIdNo').type('TIN'+utilities.getRandomNumber())
@@ -152,70 +196,137 @@ export class institutionsPage{
         utilities.uploadDocument("certificate-of-incorporation")
         utilities.uploadDocument("memom-mart")
         utilities.uploadDocument("proof-of-address")
-        cy.wait(8000)
-        cy.get('.Toastify__toast-body > :nth-child(2)').should('have.text', 'File uploaded successfully');
+        //Wait for files to upload
+        cy.wait(10000)
+
+        //Used to handle cases where file upload fails
+        // cy.get('.Toastify__toast-body > :nth-child(2)', {timeout: 5000}).then(($message) => {
+        //     if($message.text() === 'File uploaded successfully'){
+        //         cy.log('File uploaded successfully')
+        //     }else{
+        //         cy.get(':nth-child(2) > .col-2').then(($el) => {
+        //             if($el.length <= 0){
+        //                 utilities.uploadDocument("business-registration")
+        //                 cy.get('.Toastify__toast--success', { timeout: 15000 })
+        //             }
+        //         })
+        //         cy.get(':nth-child(4) > .col-2').then(($el) => {
+        //             if($el.length <= 0){
+        //                 utilities.uploadDocument( "tax-identification")
+        //                 cy.get('.Toastify__toast--success', { timeout: 15000 })
+        //             }
+        //         })
+        //         cy.get(':nth-child(5) > .col-2').then(($el) => {
+        //             if($el.length <= 0){
+        //                 utilities.uploadDocument("certificate-of-incorporation")
+        //                 cy.get('.Toastify__toast--success', { timeout: 15000 })
+        //             }
+        //         })
+        //         cy.get(':nth-child(6) > .col-2').then(($el) => {
+        //             if($el.length <= 0){
+        //                 utilities.uploadDocument("memom-mart")
+        //                 cy.get('.Toastify__toast--success', { timeout: 15000 })
+        //             }
+        //         })
+        //         cy.get(':nth-child(7) > .col-2').then(($el) => {
+        //             if($el.length <= 0){
+        //                 utilities.uploadDocument("proof-of-address")
+        //                 cy.get('.Toastify__toast--success', { timeout: 15000 })
+        //             }
+        //         })
+        //     }
+        // })
         this.clickSaveContinue()
     }
 
-    enterBusinessContactInformation(firstName, lastName, country){
-        cy.get('#bizConFirstName').scrollIntoView().type(firstName, {force:true})
-        cy.get('#bizConLastName').scrollIntoView().type(lastName, {force:true})
-        cy.get('#bizConEmail').type(firstName+utilities.getRandomNumber()+"@vph0lgs0.mailosaur.net")
+    enterBusinessContactInformation(firstName, lastName){
+        Cypress.on('fail', (error, runnable) => {
+            if(error.message.includes('Expected to find element: #bizConFirstName')){
+                utilities.uploadDocument( "tax-identification")
+                cy.get('.Toastify__toast-body > :nth-child(2)', {timeout: 5000})
+            }
+        })
+        this.elements.businessContactFirstName().scrollIntoView().type(firstName, {force:true})
+        this.elements.businessContactLastName().scrollIntoView().type(lastName, {force:true})
+        this.elements.businessContactEmail().type(firstName+utilities.getRandomNumber()+Cypress.env('EMAIL_DOMAIN'))
         this.elements.phoneNumberInput().type('08123456780')
         cy.xpath("//input[@name='bizConDateOfBirth']").type('12/01/1990')
-        cy.get('.text--lg').click()
-        cy.contains('Enter the country').click({force:true})
-        cy.get('#react-select-9-option-0').click({force: true})
-        cy.get('#react-select-10-placeholder').click({force:true})
-        cy.get('#react-select-10-option-0').click({force: true})
-        cy.get('#bizConCity').type('Yaba')
-        cy.get('#bizConAddressLine1').type('21 Adewale Street')
-        cy.get('#bizConAddressLine2').type('22 Adesanya Street')
+        cy.contains('First Name').click()
+        utilities.selectDropdown('Enter the country','0')
+        utilities.selectDropdown('Enter the state','0')
+        this.elements.businessCity().type('Yaba')
+        this.elements.businessAddressOne().type('21 Adewale Street')
+        this.elements.businessAddressTwo().type('22 Adesanya Street')
         this.clickSaveContinue()
     }
 
-    enterDirectorInformation(firstName,lastName,dirEmail){
+    enterDirectorInformation(firstName,lastName,dirEmail,newDirector, onboarding){
+        var isOnboardingInvite = (onboarding === "true" )
+
         cy.get('#dirFirstName').type(firstName, {force:true})
         cy.get('#dirLastName').type(lastName, {force:true})
         cy.get('#dirEmail').type(dirEmail+utilities.getRandomNumber()+'@yopmail.com', {force:true})
         cy.xpath("//input[@name='dirDateOfBirth']").type('12/01/1990')
+        cy.contains('Identity Card Type').click()
         this.elements.phoneNumberInput().type('08123456780')
         utilities.uploadDocument( "director-id")
-        cy.get('#react-select-11-placeholder').click({force:true})
-        cy.get('#react-select-11-option-0').click({force: true})
+        //Choose ID Card Type
+        utilities.selectDropdown('Choose ID Card Type','0')
         cy.get('#dirIdentityNo').type('SBIN'+utilities.getRandomNumber())
         cy.xpath("//input[@name='dirIdentityIssuedDate']").type('12/01/2022')
         cy.xpath("//input[@name='dirIdentityExpiredDate']").type('12/01/2028')
-        cy.get('#react-select-12-placeholder').click({force:true})
-        cy.get('#react-select-12-option-0').click({force: true})
-        cy.get('#react-select-13-placeholder').click({force:true})
-        cy.get('#react-select-13-option-0').click({force: true})
+        cy.contains('Select Today').click()
+        if(isOnboardingInvite){
+            utilities.selectDropdown('Choose Country', '0')
+            utilities.selectDropdown('Choose State', '0')
+        }
+        if(!isOnboardingInvite){
+            utilities.selectDropdown('Enter the country','0')
+            utilities.selectDropdown('Enter the state','0')
+        }
+       
         cy.get('#dirCity').type('Yaba')
         cy.get('#dirAddressLine1').type('21 Adewale Street')
         cy.get('#dirAddressLine2').type('22 Adesanya Street')
         cy.wait(2000)
-        cy.get('.Toastify__toast-body > :nth-child(2)').should('have.text', 'File uploaded successfully');
-        this.elements.addDirBtn().click()
+        cy.get('.Toastify__toast-body > :nth-child(2)', {timeout:8000}).should('have.text', 'File uploaded successfully');
+        if(newDirector){
+            this.elements.addNewDirBtn().click()
+        }else{
+            this.elements.addDirBtn().click()
+        }
         this.elements.saveAndContinueBtn().click()
     }
 
-    enterCustomDomainDetails(){
+    enterCustomDomainDetails(onboarding){
+        var isOnboardingInvite = (onboarding === "true" )
+
         cy.contains('Custom Domain')
-        cy.get('.col-md-7 > :nth-child(2) > div.d-flex > .btn--secondary').contains('Add Institution').click()
+        if(isOnboardingInvite){
+            cy.get('.btn--secondary').click()
+        }
+        if(!isOnboardingInvite){
+            cy.get('.col-md-7 > :nth-child(2) > div.d-flex > .btn--secondary').contains('Add Institution').click()
+        }
         cy.get('#institutionDomainName').scrollIntoView().type('https://definance'+utilities.getRandomNumber()+'.io', {force:true})
         cy.get('#merchantDomainName').scrollIntoView().type('https://automerchant'+utilities.getRandomNumber()+'.io', {force:true})
-        cy.get('.col-md-7 > :nth-child(2) > div.d-flex > .btn--secondary').contains('Add Institution').click()
+        if(isOnboardingInvite){
+            cy.get('.btn--secondary').click()
+        }
+        if(!isOnboardingInvite){
+            cy.get('.col-md-7 > :nth-child(2) > div.d-flex > .btn--secondary').contains('Add Institution').click()
+        }
     }
 
     viewInstitutionInfo(nameOfInstitution){
         if(nameOfInstitution == undefined){
             cy.get('table tr:nth-child(2)').click();
-
         }else{
             cy.get('#searchQuery').type(nameOfInstitution + " {enter}")
-            cy.get('table tr:nth-child(2)').click();
-
+            cy.wait(1000)
+            cy.get('table tbody tr:nth-child(1)').click();
         }
+
         cy.get('div.header__badge > .active').contains('Institution Info')
         cy.contains('Transaction value')
         cy.contains('Commission Value')
@@ -241,7 +352,7 @@ export class institutionsPage{
         cy.get('#route-1-tab').click()
     }
 
-    clickSendSubInstitutionInvite(){k
+    clickSendSubInstitutionInvite(){
         cy.wait(3000)
         this.elements.institutionSendInvite().click()
     }
@@ -280,12 +391,72 @@ export class institutionsPage{
 
     enterOTP(){
         cy.get('.heading-4').contains('Enter the one-time password sent to your phone')
+        cy.wait(500)
         for(let i=1; i<=6; i++){ 
             cy.xpath('//input[@aria-label="Please enter OTP character '+i+'"]').type(i)
             cy.wait(1000)
         }
         this.elements.clickContinueButton()
-        
+    }
+
+    selectPreferredServices(){
+        cy.contains('Preferred Services')
+        cy.contains('Merchant Payment')
+        cy.contains('Agency Banking')
+        cy.xpath("(//input[@type='checkbox'])[1]").click()
+        cy.contains('Continue').click()
+    }
+
+    verifyApplicationPage(){
+        cy.contains('Application Preview')
+        cy.contains('Business Name')
+        cy.contains('Business sector')
+        cy.contains('business EMail')
+        cy.contains('business Size')
+        cy.contains('Contact Information')
+        cy.contains('Business Support Contact')
+        cy.contains('Custom Domain')
+        cy.contains('Business Documents')
+        cy.contains("Director")
+    }
+
+    editApplication(){
+        cy.xpath("(//button[text()='Edit Info'])[1]").click()
+        cy.get('.title').should('have.text', 'Edit Info')
+        const companyName = faker.company.name()
+        this.elements.businessName().type(companyName)
+        this.elements.addressLineOneInput().clear().type(faker.address.streetAddress())
+        this.elements.addressLineTwoInput().clear().type(faker.address.streetAddress())
+        this.clickSaveContinue()
+        cy.contains(companyName)
+
+        cy.xpath("(//button[text()='Edit Info'])[2]").click()
+        const firstName = faker.person.firstName('male')
+        const lastName = faker.person.lastName('male')
+        const address1 = faker.location.streetAddress()
+        const address2 = faker.location.streetAddress()
+
+        this.elements.businessContactFirstName().clear().scrollIntoView().type(firstName, {force:true})
+        this.elements.businessContactLastName().clear().scrollIntoView().type(lastName, {force:true})
+        this.elements.businessContactEmail().clear().type(firstName+utilities.getRandomNumber()+Cypress.env('EMAIL_DOMAIN'))
+        this.elements.businessCity().type('Ketu')
+        this.elements.businessAddressOne().clear().type(address1)
+        this.elements.businessAddressTwo().clear().type(address2)
+        this.clickSaveContinue()
+
+        for (let index = 0; index < 2; index++) {
+            cy.xpath("//button[text()='Add Info']").click()
+            cy.get('.title').should('have.text', 'Edit Info')
+            this.enterDirectorInformation(faker.name.firstName(), faker.name.lastName(), faker.internet.email(), true, "true")
+        }
+
+        //cy.xpath("(//button[text()='Delete'])[1]").click()
+    }
+
+    submitApplication(){
+        cy.contains('Submit Application').click()
+        cy.contains('Application Form Received!')
+        cy.contains('Log in to Dashboard')
     }
 
     viewInstitutionMerchants(){
@@ -303,7 +474,7 @@ export class institutionsPage{
     viewInstitutionUsers(){
         cy.get('#route-6-tab').click()
     }
-    
+
     viewInstitutionBranding(){
         cy.get('#route-7-tab').click()
     }

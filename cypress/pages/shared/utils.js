@@ -23,19 +23,20 @@ export class Utility{
     }
 
     uploadDocument(name_of_doc){
-        const documentPath = 'image.png'
+        const documentPath = 'BLUSALT.pdf'
         cy.get(`#${name_of_doc}`).invoke('show').attachFile(documentPath)
         cy.wait(500)
     }
 
     getLinkFromEmail(emailId){
-        cy.mailosaurGetMessage("vph0lgs0", {
-            sentTo:emailId+"@vph0lgs0.mailosaur.net"
+        cy.mailosaurGetMessage(Cypress.env('SERVER_ID'), {
+            sentTo:emailId+Cypress.env('EMAIL_DOMAIN')
         }, {
             timeout: 60000
         }).then((email) => {
             expect(email.subject).to.equal("INVITE")
             var inviteLink = email.html.links[1].href
+            cy.log(inviteLink)
             Cypress.env('inviteLink', inviteLink);
         });
     }
@@ -45,7 +46,16 @@ export class Utility{
         if (inviteLink) {
             cy.visit(inviteLink);
         } else {
-            throw new Error('Invite link was not sent.');
+            throw new Error('Invite link was not saved.');
         }
+    }
+
+    selectDropdown(dropdown_of_placeholder, value){
+        let parentId;
+        cy.contains(dropdown_of_placeholder).invoke('attr', 'id').then((id) => {
+            parentId = id.replace('placeholder', '')
+            cy.get(`#${id}`).click({force: true})
+            cy.get(`#${parentId}option-${value}`).click({force: true})    
+        }); 
     }
 }

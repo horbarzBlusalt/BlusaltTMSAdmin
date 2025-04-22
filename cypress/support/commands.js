@@ -37,5 +37,5 @@ Cypress.Commands.add('login', () => {
 Cypress.on('uncaught:exception', (err, runnable, promise) => {
     if (err.name === 'TypeError') {
         return false
-    }
+    }   
   })

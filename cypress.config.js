@@ -18,7 +18,9 @@ module.exports = defineConfig({
     saveAllAttempts: false,
   },
   env:{
-    MAILOSAUR_API_KEY: "ja51ubpE5j9pYfSeyPG4Q0slLfLLMBIr",
+    MAILOSAUR_API_KEY: "G8GwIi6tanSkefQmDG99d4IzyULIHipu",
+    SERVER_ID:"ujkaarza",
+    EMAIL_DOMAIN: "@ujkaarza.mailosaur.net",
   },
   e2e: {
     async setupNodeEvents(on, config) {
