@@ -10,11 +10,11 @@ export class institutionsPage{
         toggleSB: ()=> cy.get('.main__sidebar > .navbar-toggler'),
         organizationSB: () => cy.get('.main__sidebar > .list-unstyled > :nth-child(3) > .ps-3'),
         moduleName: () => cy.get('.sub__sidebar__name'),
-        tableColumnOne: () => cy.get('.table__head > .pointer > :nth-child(1)'),
-        tableColumnTwo: () => cy.get('.table__head > .pointer > :nth-child(2)'),
-        tableColumnThree: () => cy.get('.table__head > .pointer > :nth-child(3)'),
-        tableColumnFour: () => cy.get('.table__head > .pointer > :nth-child(4)'),
-        tableColumnFive: () => cy.get('.table__head > .pointer > :nth-child(5)'),
+        tableColumnOne: () => cy.get('.table__head > tr > :nth-child(1)'),
+        tableColumnTwo: () => cy.get('.table__head > tr > :nth-child(2)'),
+        tableColumnThree: () => cy.get('.table__head > tr > :nth-child(3)'),
+        tableColumnFour: () => cy.get('.table__head > tr > :nth-child(4)'),
+        tableColumnFive: () => cy.get('.table__head > tr > :nth-child(5)'),
         sendInviteBtn: () => cy.contains('Send Invite'),
         addInstitutionBtn: () => cy.contains('Add New Institution'),
         institutionEmailInput: () => cy.get('#email'),
@@ -59,7 +59,9 @@ export class institutionsPage{
         passwordInput: () => cy.xpath('//input[@name="password"]'),
         confirmPasswordInput: () => cy.xpath('//input[@name="confirmPassword"]'),
         clickContinueButton: () => cy.get('.btn').click(),
-
+        submitApplicationButton: () => cy.get('.btn').contains('Submit Application'),
+        searchInput: () => cy.get('#searchQuery'),
+        saveFilter:() => cy.get('button.btn--secondary').contains('Save Filter')
     }
 
     clickSideBarToggle(){
@@ -68,6 +70,63 @@ export class institutionsPage{
 
     clickOrganizationSideBar(){
         this.elements.organizationSB().click()
+    }
+
+    searchInstitution(keyword){
+        this.elements.searchInput().clear().type(keyword +" {enter}")
+        cy.get('tbody tr')
+            .should('have.length.at.least', 1)
+            .first()
+            .within(() => {
+                cy.get('td').eq(0).should('contain.text', keyword);
+            });
+        
+    }
+
+    filterByParameters(institutionID, institutionName){
+        cy.get('#filterDropdownButton').click()
+        if(institutionID !== null){
+            cy.get('#institutionId').type(institutionID)
+            this.elements.saveFilter().click()
+        }
+        cy.get('#name').type(institutionName)
+        this.elements.saveFilter().click()  
+    }
+
+    filterByStatus(){
+        cy.get('#filterDropdownButton').click()
+        cy.get('#Unlocked').click()
+        this.elements.saveFilter().click()
+        cy.get('tbody tr')
+            .should('have.length.at.least', 1)
+            .first()
+            .within(() => {
+                cy.get('td').eq(0).should('contain.text', 'Inactive');
+            });
+
+        cy.get('#filterDropdownButton').click()
+        cy.get('#Locked').click()
+        this.elements.saveFilter().click()
+        cy.get('tbody tr')
+            .should('have.length.at.least', 1)
+            .first()
+            .within(() => {
+                cy.get('td').eq(0).should('contain.text', 'Active');
+            });
+    }
+
+    resetFilter(){
+        cy.get('#filterDropdownButton').click()
+        cy.get('button.btn--light-gray--bordered').click()
+    }
+
+    exportCSV(){
+        cy.contains('Export CSV').click()
+        cy.get('.primary__header')
+            .should('be.visible')
+            .and('contain', 'Download Report')
+        
+        cy,get('button.btn--secondary').contains('Download').click()
     }
 
     verifyInstitutionsPage(){
@@ -82,29 +141,32 @@ export class institutionsPage{
     clickSendInvite(){
         cy.wait(3000)
         this.elements.sendInviteBtn().click()
-        
     }
 
     clickAddInstitution(){
         this.elements.addInstitutionBtn().click()
+        cy.contains('Terminal Owner').click()
+        cy.get('.cta > .btn--secondary').contains('Continue').click()
     }
 
     enterInstitutionDetails(instName, instEmail){
         this.elements.institutionNameInput().type(instName)
-        this.elements.institutionEmailInput().type(instEmail+"@vph0lgs0.mailosaur.net")
+        this.elements.institutionEmailInput().type(instEmail+"@ujkaarza.mailosaur.net")
         this.elements.submitInviteBtn().click()
+        cy.intercept('POST','/api/authentication-service/commons/send-invitation').as('sendInvite')
     }
 
     verifyInstitutionInvite(instEmail){
+        cy.wait('@sendInvite').its('response.statusCode').should('eq', 200);
         this.elements.notificationMessage().contains('Invite Sent Successfully')
-        utilities.getEmailMessage(instEmail)
+        utilities.getLinkFromEmail(instEmail)
     }
 
     enterAdminProfileDetails(firstName, lastName, email, phoneNumber){
         cy.contains("Admin Contact")
         this.elements.firstNameInput().scrollIntoView().type(firstName, {force:true});
         this.elements.lastNameInput().scrollIntoView().type(lastName, {force:true});
-        this.elements.adminEmailInput().scrollIntoView().type(email+utilities.getRandomNumber()+'@vph0lgs0.mailosaur.net', {force:true});
+        this.elements.adminEmailInput().scrollIntoView().type(email+utilities.getRandomNumber()+'@ujkaarza.mailosaur.net', {force:true});
         this.elements.phoneNumberInput().type(phoneNumber)
         this.elements.saveAndContinueBtn().click()
     }
@@ -112,16 +174,14 @@ export class institutionsPage{
     enterBusinessProfileDetails(bizName, phoneNumber, businessEmail, addressOne, addressTwo){
         cy.contains("Business Profile Information")
         cy.get(':nth-child(1) > .form-group > .flex__start > #name').scrollIntoView().type(bizName, {force:true});
-        cy.get('#react-select-5-placeholder').click({force: true})
-        cy.get('#react-select-5-option-0').click({force: true})
-        cy.contains('Choose business emplyee Size').click({force: true})
-        cy.get('#react-select-6-option-0').click({force: true})
+        cy.get('#sector').type('Nanotechnology' + " {enter}")
+        cy.get('#bizSize').type('Personal'+ " {enter}")
+        cy.get('#react-select-4-placeholder').click({force: true})
+        cy.get('#react-select-4-option-0').click({force: true})
         this.elements.phoneNumberInput().type(phoneNumber)
         this.elements.institutionProfileEmailInput().type(businessEmail+utilities.getRandomNumber()+'@yopmail.com')
-        cy.get('#react-select-7-placeholder').click({force: true})
-        cy.get('#react-select-7-option-0').click({force: true})
-        cy.get('#react-select-8-placeholder').click({force: true})
-        cy.get('#react-select-8-option-0').click({force: true})
+        cy.get('#react-select-5-placeholder').click({force: true})
+        cy.get('#react-select-5-option-0').click({force: true})
         this.elements.businessCityInput().type('Lekki Phase 1')
         this.elements.addressLineOneInput().type(addressOne)
         this.elements.addressLineTwoInput().type(addressTwo)
@@ -151,8 +211,9 @@ export class institutionsPage{
         cy.wait(100)
         utilities.uploadDocument("certificate-of-incorporation")
         utilities.uploadDocument("memom-mart")
+        cy.intercept('POST','/api/authentication-service/documents/upload').as('uploadDoc')
         utilities.uploadDocument("proof-of-address")
-        cy.wait(8000)
+        cy.wait('@uploadDoc',{timeout:10000})
         cy.get('.Toastify__toast-body > :nth-child(2)').should('have.text', 'File uploaded successfully');
         this.clickSaveContinue()
     }
@@ -160,14 +221,14 @@ export class institutionsPage{
     enterBusinessContactInformation(firstName, lastName, country){
         cy.get('#bizConFirstName').scrollIntoView().type(firstName, {force:true})
         cy.get('#bizConLastName').scrollIntoView().type(lastName, {force:true})
-        cy.get('#bizConEmail').type(firstName+utilities.getRandomNumber()+"@vph0lgs0.mailosaur.net")
+        cy.get('#bizConEmail').type(firstName+utilities.getRandomNumber()+"@ujkaarza.mailosaur.net")
         this.elements.phoneNumberInput().type('08123456780')
         cy.xpath("//input[@name='bizConDateOfBirth']").type('12/01/1990')
         cy.get('.text--lg').click()
-        cy.contains('Enter the country').click({force:true})
-        cy.get('#react-select-9-option-0').click({force: true})
-        cy.get('#react-select-10-placeholder').click({force:true})
-        cy.get('#react-select-10-option-0').click({force: true})
+        cy.contains('Choose country').click({force:true})
+        cy.get('#react-select-6-option-0').click({force: true})
+        cy.get('#react-select-7-placeholder').click({force:true})
+        cy.get('#react-select-7-option-0').click({force: true})
         cy.get('#bizConCity').type('Yaba')
         cy.get('#bizConAddressLine1').type('21 Adewale Street')
         cy.get('#bizConAddressLine2').type('22 Adesanya Street')
@@ -181,19 +242,20 @@ export class institutionsPage{
         cy.xpath("//input[@name='dirDateOfBirth']").type('12/01/1990')
         this.elements.phoneNumberInput().type('08123456780')
         utilities.uploadDocument( "director-id")
-        cy.get('#react-select-11-placeholder').click({force:true})
-        cy.get('#react-select-11-option-0').click({force: true})
+        cy.intercept('POST','/api/authentication-service/documents/upload').as('uploadDoc')
+        cy.get('#react-select-8-placeholder').click({force:true})
+        cy.get('#react-select-8-option-0').click({force: true})
         cy.get('#dirIdentityNo').type('SBIN'+utilities.getRandomNumber())
         cy.xpath("//input[@name='dirIdentityIssuedDate']").type('12/01/2022')
         cy.xpath("//input[@name='dirIdentityExpiredDate']").type('12/01/2028')
-        cy.get('#react-select-12-placeholder').click({force:true})
-        cy.get('#react-select-12-option-0').click({force: true})
-        cy.get('#react-select-13-placeholder').click({force:true})
-        cy.get('#react-select-13-option-0').click({force: true})
+        cy.get('#react-select-9-placeholder').click({force:true})
+        cy.get('#react-select-9-option-0').click({force: true})
+        cy.get('#react-select-10-placeholder').click({force:true})
+        cy.get('#react-select-10-option-0').click({force: true})
         cy.get('#dirCity').type('Yaba')
         cy.get('#dirAddressLine1').type('21 Adewale Street')
         cy.get('#dirAddressLine2').type('22 Adesanya Street')
-        cy.wait(2000)
+        cy.wait('@uploadDoc',{timeout:10000})
         cy.get('.Toastify__toast-body > :nth-child(2)').should('have.text', 'File uploaded successfully');
         this.elements.addDirBtn().click()
         this.elements.saveAndContinueBtn().click()
@@ -201,10 +263,17 @@ export class institutionsPage{
 
     enterCustomDomainDetails(){
         cy.contains('Custom Domain')
-        cy.get('.col-md-7 > :nth-child(2) > div.d-flex > .btn--secondary').contains('Add Institution').click()
+        cy.get('.btn--secondary').contains('Add Institution').click()
         cy.get('#institutionDomainName').scrollIntoView().type('https://definance'+utilities.getRandomNumber()+'.io', {force:true})
         cy.get('#merchantDomainName').scrollIntoView().type('https://automerchant'+utilities.getRandomNumber()+'.io', {force:true})
-        cy.get('.col-md-7 > :nth-child(2) > div.d-flex > .btn--secondary').contains('Add Institution').click()
+        cy.get('.btn--secondary').contains('Add Institution').click()
+    }
+
+    applicationPreviewPage(){
+        cy.get('.heading-1').contains('Application Preview')
+        cy.intercept('POST','/api/authentication-service/institution/public').as('submitApplication')
+        this.elements.submitApplicationButton().click()
+        cy.wait('@submitApplication').its('response.statusCode').should('eq', 200);
     }
 
     viewInstitutionInfo(nameOfInstitution){
@@ -241,12 +310,14 @@ export class institutionsPage{
         cy.get('#route-1-tab').click()
     }
 
-    clickSendSubInstitutionInvite(){k
-        cy.wait(3000)
+    clickSendSubInstitutionInvite(){
+        cy.wait(1000)
         this.elements.institutionSendInvite().click()
+        cy.intercept('POST','/api/authentication-service/commons/send-invitation').as('sendInvite')
     }
 
     verifySubInstitutionInvite(instEmail){
+        cy.wait('@sendInvite').its('response.statusCode').should('eq', 200);
         this.elements.notificationMessage().contains('Invite Sent Successfully')
         utilities.getLinkFromEmail(instEmail)
     }

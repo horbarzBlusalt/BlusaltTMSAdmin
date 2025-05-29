@@ -29,8 +29,8 @@ export class Utility{
     }
 
     getLinkFromEmail(emailId){
-        cy.mailosaurGetMessage("vph0lgs0", {
-            sentTo:emailId+"@vph0lgs0.mailosaur.net"
+        cy.mailosaurGetMessage("ujkaarza", {
+            sentTo:emailId+"@ujkaarza.mailosaur.net"
         }, {
             timeout: 60000
         }).then((email) => {

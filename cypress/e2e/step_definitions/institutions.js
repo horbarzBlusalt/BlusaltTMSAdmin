@@ -10,6 +10,7 @@ const instPage = new institutionsPage()
 //Institution details
 const institutionInfoToView = 'rave'
 const bizName = faker.company.name()
+const institutionName = faker.company.name().split(' ')[0].replace(/[^\w\s]/gi, '')
 const phoneNumber = faker.phone.number()
 const businessEmail = "abc"
 const addressOne = faker.address.streetAddress()
@@ -76,11 +77,11 @@ When('users click on send invite', () => {
 })
 
 When('users enter {string} {string} and sends invite', (instName, instEmail) => {
-    instPage.enterInstitutionDetails(instName,instEmail)
+    instPage.enterInstitutionDetails(institutionName,institutionName)
 })
 
 Then('users can send {string} institution invite successfully', (instEmail) =>{
-    instPage.verifyInstitutionInvite(instEmail)
+    instPage.verifyInstitutionInvite(institutionName)
 })
 
 When('view specific institution', () => {
@@ -132,7 +133,7 @@ When('users click the send invite button', () => {
 })
 
 Then('{string} subinstitution users are invited successfully', (instEmail) => {
-    instPage.verifySubInstitutionInvite(instEmail)
+    instPage.verifySubInstitutionInvite(institutionName)
 })
 
 When('users visit the generated onboarding link', () => {
@@ -149,4 +150,17 @@ When('users users enter basic information', () => {
 
 When('users enter one time password', () => {
     instPage.enterOTP()
+})
+
+Then('users can view preview page and complete application', () => {
+    instPage.applicationPreviewPage()
+})
+
+Then('users can search',()=>{
+    instPage.searchInstitution('RAVE')
+})
+
+Then('users can filter',()=>{
+    instPage.filterByStatus()
+    instPage.resetFilter()
 })

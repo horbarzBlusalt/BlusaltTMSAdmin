@@ -6,7 +6,7 @@ export class authenticationPage{
         emailInput: () => cy.get('#email'),
         passwordInput: () => cy.xpath("//input[@placeholder='Enter Password']"),
         loginBtn: () => cy.get('.btn'),
-        dashboardElement: () => cy.get('.sc-hknOHE > .m-0'),
+        dashboardElement: () => cy.contains('Dashboard'),
         loginFailureMessage: () => cy.xpath("//div[normalize-space()='Invalid username and password.']")
     }
 
@@ -27,6 +27,7 @@ export class authenticationPage{
 
     verifyLoginSuccessful(){
         this.elements.dashboardElement().contains('Dashboard')
+        cy.url().should('include','/merchant-payment/dashboard')
     }
 
     verifyLoginFailure(){
