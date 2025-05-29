@@ -1,5 +1,5 @@
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
-import {Utility} from "../../pages/shared/utils"
+import {Utility} from "../../pages/index"
 import { merchantPaymentPage } from "../../pages/index";
 
 utilities = new Utility()

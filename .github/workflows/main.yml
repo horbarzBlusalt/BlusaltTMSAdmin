@@ -1,10 +1,33 @@
 name: TMS Admin Cypress Test
-on: [push]
+on: 
+  push: 
+  workflow_dispatch:
 jobs: 
   cypress-run:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browsers: [chrome, firefox, edge]
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Cypress run
-        uses: cypress-io/github-action@v5
+      - name: Cypress run in ${{ matrix.browsers }}
+        uses: cypress-io/github-action@v6
+        with:
+          browsers: ${{ matrix.browsers }}
+          command: npx cypress run --browser ${{ matrix.browsers }} --reporter-options reportDir=cypress/reports/${{ matrix.browsers }}
+
+      - name: Merger Mochawesome Reports
+        run: npx mochawesome-merge cypress/reports/${{ matrix.browsers }}/*.json > cypress/reports/${{ matrix.browsers }}/merged-reports.json
+
+      - name: Generate HTML Reports
+        run: npx merge cypress/reports//${{ matrix.browsers }}/merged-reports.json --reportDir cypress/reports//${{ matrix.browsers }} -f "${{ matrix.browsers }}-report.html"
+
+      - name: Upload HTML Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cypress HTML Report ${{ matrix.browsers }}
+          path: cypress/reports/${{ matrix.browsers }}
+

@@ -1,5 +1,5 @@
 const { defineConfig } = require("cypress");
-const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/lib');
+// const { beforeRunHook, afterRunHook } = require('cypress-mochawesome-reporter/lib');
 const createBundler = require("@bahmutov/cypress-esbuild-preprocessor");
 const addCucumberPreprocessorPlugin = require("@badeball/cypress-cucumber-preprocessor").addCucumberPreprocessorPlugin;
 const createEsbuildPlugin = require("@badeball/cypress-cucumber-preprocessor/esbuild").createEsbuildPlugin;
@@ -8,14 +8,18 @@ module.exports = defineConfig({
   viewportWidth: 1280,
   viewportHeight: 800,
   video: true,
-  reporter: 'cypress-mochawesome-reporter',
+  reporter: 'mochawesome',
   reporterOptions: {
-    charts: true,
-    reportPageTitle: 'Blusalt TMS Admin',
-    embeddedScreenshots: true,
-    reportFilename: 'tms_admin_report',
-    inlineAssets: true,
-    saveAllAttempts: false,
+    // charts: true,
+    // reportPageTitle: 'Blusalt TMS Admin',
+    // embeddedScreenshots: true,
+    // reportFilename: 'tms_admin_report',
+    // inlineAssets: true,
+    // saveAllAttempts: false,
+    reportDir:'cypress/results',
+    overwrite:false,
+    html: false,
+    json: true
   },
   env:{
     MAILOSAUR_API_KEY: "G8GwIi6tanSkefQmDG99d4IzyULIHipu",
