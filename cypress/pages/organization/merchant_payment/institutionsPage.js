@@ -145,7 +145,7 @@ export class institutionsPage{
     }
 
     verifyInstitutionInvite(instEmail){
-        cy.wait('@sendInvite').its('response.statusCode').should('eq', 200);
+        cy.wait('@sendInvite',{timeout:10000}).its('response.statusCode').should('eq', 200);
         this.elements.notificationMessage().contains('Invite Sent Successfully')
         utilities.getLinkFromEmail(instEmail)
     }

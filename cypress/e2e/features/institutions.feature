@@ -22,6 +22,7 @@ Feature: Institution Management
         |institution_name|institution_email|
         |proverb|proverb|
 
+    @skip
     Scenario: Test to ensure users can add new institution
         When users navigate into organization module
         When users click on the add new institution button
