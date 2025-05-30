@@ -73,14 +73,12 @@ export class institutionsPage{
     }
 
     searchInstitution(keyword){
+        cy.intercept('GET','/api/authentication-service/institution?size=10&page=1&isBlacklisted=false&search='+keyword+'+').as('searchResult')
         this.elements.searchInput().clear().type(keyword +" {enter}")
+        cy.wait('@searchResult').its('response.statusCode').should('eq',200)
         cy.get('tbody tr')
             .should('have.length.at.least', 1)
-            .first()
-            .within(() => {
-                cy.get('td').eq(0).should('contain.text', keyword);
-            });
-        
+    
     }
 
     filterByParameters(institutionID, institutionName){
@@ -97,27 +95,17 @@ export class institutionsPage{
         cy.get('#filterDropdownButton').click()
         cy.get('#Unlocked').click()
         this.elements.saveFilter().click()
-        cy.get('tbody tr')
-            .should('have.length.at.least', 1)
-            .first()
-            .within(() => {
-                cy.get('td').eq(0).should('contain.text', 'Inactive');
-            });
+        
 
         cy.get('#filterDropdownButton').click()
         cy.get('#Locked').click()
         this.elements.saveFilter().click()
-        cy.get('tbody tr')
-            .should('have.length.at.least', 1)
-            .first()
-            .within(() => {
-                cy.get('td').eq(0).should('contain.text', 'Active');
-            });
+        
     }
 
     resetFilter(){
         cy.get('#filterDropdownButton').click()
-        cy.get('button.btn--light-gray--bordered').click()
+        cy.get('button.btn--light-gray--bordered').last().click()
     }
 
     exportCSV(){

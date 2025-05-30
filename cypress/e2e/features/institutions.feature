@@ -8,7 +8,6 @@ Feature: Institution Management
         When users navigate into organization module
         Then users can view all institutions
 
-    @only
     Scenario: Test to ensure users can carry out search and filter operations
         When users navigate into organization module
         Then users can search
