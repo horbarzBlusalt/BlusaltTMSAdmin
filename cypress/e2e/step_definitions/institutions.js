@@ -1,9 +1,6 @@
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
 import {institutionsPage} from "../../pages/index";
-import {Utility} from "../../pages/index"
 import { faker } from '@faker-js/faker';
-
-utilities = new Utility()
 
 const instPage = new institutionsPage()
 

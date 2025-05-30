@@ -1,8 +1,6 @@
 import { Given, When, Then } from "@badeball/cypress-cucumber-preprocessor";
-import {Utility} from "../../pages/index"
 import { merchantPaymentPage } from "../../pages/index";
 
-utilities = new Utility()
 merchantPage = new merchantPaymentPage()
 
 Given('users are successfully logged in', () => {
