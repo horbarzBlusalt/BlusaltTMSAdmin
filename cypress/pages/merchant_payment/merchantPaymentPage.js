@@ -1,5 +1,5 @@
 ///<reference types="cypress"/>
-import { Utility } from "../../shared/utils"
+import { Utility } from "../shared/utils"
 import { faker } from '@faker-js/faker';
 
 
