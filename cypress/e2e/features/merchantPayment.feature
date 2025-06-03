@@ -6,4 +6,7 @@ Feature: Merchant Payment Module
     
     Scenario: Test to ensure users can view all the merchant payment dashboard 
         When users navigate into merchant payment dashboard
-        Then we are done
+        When users navigate into the transactions page
+        When users navigate into the terminals page
+        Then verify terminal information
+        
