@@ -61,7 +61,14 @@ export class institutionsPage{
         clickContinueButton: () => cy.get('.btn').click(),
         submitApplicationButton: () => cy.get('.btn').contains('Submit Application'),
         searchInput: () => cy.get('#searchQuery'),
-        saveFilter:() => cy.get('button.btn--secondary').contains('Save Filter')
+        saveFilter:() => cy.get('button.btn--secondary').contains('Save Filter'),
+        selectBusinessCountrydropdown: () => cy.get('#bizConCountry'),
+        selectBusinessStreetDropdown: () => cy.get('#bizConState'),
+        selectDirCountryDropdown: () => cy.get('#dirCountry'),
+        selectDirStateDropdown: () => cy.get('#dirState'),
+        selectCountryDropdown: () => cy.get('#country'),
+        selectStateDropdown: () => cy.get('#state'),
+        selectDirectorIdentityDropdown: () => cy.get('#dirIdentityType'),
     }
 
     clickSideBarToggle(){
@@ -132,9 +139,9 @@ export class institutionsPage{
     }
 
     clickAddInstitution(){
-        this.elements.addInstitutionBtn().click()
-        cy.contains('Terminal Owner').click()
-        cy.get('.cta > .btn--secondary').contains('Continue').click()
+        this.elements.addInstitutionBtn().should('be.visible').click()
+        // cy.contains('Terminal Owner').click()
+        // cy.get('.cta > .btn--secondary').contains('Continue').click()
     }
 
     enterInstitutionDetails(instName, instEmail){
@@ -164,12 +171,14 @@ export class institutionsPage{
         cy.get(':nth-child(1) > .form-group > .flex__start > #name').scrollIntoView().type(bizName, {force:true});
         cy.get('#sector').type('Nanotechnology' + " {enter}")
         cy.get('#bizSize').type('Personal'+ " {enter}")
-        cy.get('#react-select-4-placeholder').click({force: true})
-        cy.get('#react-select-4-option-0').click({force: true})
+        this.elements.selectCountryDropdown().click({force:true})
+        this.elements.selectCountryDropdown().type('Nigeria')
+        this.elements.selectCountryDropdown().type('{enter}')
+        this.elements.selectStateDropdown().click({force:true})
+        this.elements.selectStateDropdown().type('Lagos')
+        this.elements.selectStateDropdown().type('{enter}')
         this.elements.phoneNumberInput().type(phoneNumber)
         this.elements.institutionProfileEmailInput().type(businessEmail+utilities.getRandomNumber()+'@yopmail.com')
-        cy.get('#react-select-5-placeholder').click({force: true})
-        cy.get('#react-select-5-option-0').click({force: true})
         this.elements.businessCityInput().type('Lekki Phase 1')
         this.elements.addressLineOneInput().type(addressOne)
         this.elements.addressLineTwoInput().type(addressTwo)
@@ -213,10 +222,14 @@ export class institutionsPage{
         this.elements.phoneNumberInput().type('08123456780')
         cy.xpath("//input[@name='bizConDateOfBirth']").type('12/01/1990')
         cy.get('.text--lg').click()
-        cy.contains('Choose country').click({force:true})
-        cy.get('#react-select-6-option-0').click({force: true})
-        cy.get('#react-select-7-placeholder').click({force:true})
-        cy.get('#react-select-7-option-0').click({force: true})
+        this.elements.selectBusinessCountrydropdown().click({force:true})
+        this.elements.selectBusinessCountrydropdown().type('Nigeria')
+        this.elements.selectBusinessCountrydropdown().type('{enter}')
+        //cy.contains('Choose Country').last().click({force:true})
+        this.elements.selectBusinessStreetDropdown().click({force:true})
+        this.elements.selectBusinessStreetDropdown().type('Lagos')
+        this.elements.selectBusinessStreetDropdown().type('{enter}')
+        //cy.get('#react-select-7-option-0').click({force: true})
         cy.get('#bizConCity').type('Yaba')
         cy.get('#bizConAddressLine1').type('21 Adewale Street')
         cy.get('#bizConAddressLine2').type('22 Adesanya Street')
@@ -231,21 +244,24 @@ export class institutionsPage{
         this.elements.phoneNumberInput().type('08123456780')
         utilities.uploadDocument( "director-id")
         cy.intercept('POST','/api/authentication-service/documents/upload').as('uploadDoc')
-        cy.get('#react-select-8-placeholder').click({force:true})
-        cy.get('#react-select-8-option-0').click({force: true})
+        this.elements.selectDirCountryDropdown().click({force:true})
+        this.elements.selectDirCountryDropdown().type('Nigeria')
+        this.elements.selectDirCountryDropdown().type('{enter}')
+        this.elements.selectDirectorIdentityDropdown().click({force:true})
+        this.elements.selectDirectorIdentityDropdown().type('International Passport')
+        this.elements.selectDirectorIdentityDropdown().type('{enter}')  
         cy.get('#dirIdentityNo').type('SBIN'+utilities.getRandomNumber())
         cy.xpath("//input[@name='dirIdentityIssuedDate']").type('12/01/2022')
         cy.xpath("//input[@name='dirIdentityExpiredDate']").type('12/01/2028')
-        cy.get('#react-select-9-placeholder').click({force:true})
-        cy.get('#react-select-9-option-0').click({force: true})
-        cy.get('#react-select-10-placeholder').click({force:true})
-        cy.get('#react-select-10-option-0').click({force: true})
+        this.elements.selectDirStateDropdown().click({force:true})
+        this.elements.selectDirStateDropdown().type('Lagos')
+        this.elements.selectDirStateDropdown().type('{enter}')
         cy.get('#dirCity').type('Yaba')
         cy.get('#dirAddressLine1').type('21 Adewale Street')
         cy.get('#dirAddressLine2').type('22 Adesanya Street')
         cy.wait('@uploadDoc',{timeout:10000})
         cy.get('.Toastify__toast-body > :nth-child(2)').should('have.text', 'File uploaded successfully');
-        this.elements.addDirBtn().click()
+        this.elements.addDirBtn().should('be.visible').click()
         this.elements.saveAndContinueBtn().click()
     }
 

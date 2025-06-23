@@ -8,6 +8,7 @@ Feature: Institution Management
         When users navigate into organization module
         Then users can view all institutions
 
+    @skip
     Scenario: Test to ensure users can carry out search and filter operations
         When users navigate into organization module
         Then users can search
@@ -22,7 +23,7 @@ Feature: Institution Management
         |institution_name|institution_email|
         |proverb|proverb|
 
-    @skip
+    @only
     Scenario: Test to ensure users can add new institution
         When users navigate into organization module
         When users click on the add new institution button

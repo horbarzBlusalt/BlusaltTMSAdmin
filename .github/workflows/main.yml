@@ -2,32 +2,81 @@ name: TMS Admin Cypress Test
 on: 
   push: 
   workflow_dispatch:
+
 jobs: 
   cypress-run:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        browsers: [chrome, firefox, edge]
+        browsers: [chrome, firefox, edge, safari]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm ci
+        
       - name: Cypress run in ${{ matrix.browsers }}
         uses: cypress-io/github-action@v6
         with:
-          browsers: ${{ matrix.browsers }}
+          browser: ${{ matrix.browsers }}
           command: npx cypress run --browser ${{ matrix.browsers }} --reporter-options reportDir=cypress/reports/${{ matrix.browsers }}
 
-      - name: Merger Mochawesome Reports
+      - name: Merge Mochawesome Reports
         run: npx mochawesome-merge cypress/reports/${{ matrix.browsers }}/*.json > cypress/reports/${{ matrix.browsers }}/merged-reports.json
 
       - name: Generate HTML Reports
-        run: npx marge cypress/reports//${{ matrix.browsers }}/merged-reports.json --reportDir cypress/reports//${{ matrix.browsers }} -f "${{ matrix.browsers }}-report.html"
+        run: npx marge cypress/reports/${{ matrix.browsers }}/merged-reports.json --reportDir cypress/reports/${{ matrix.browsers }} -f "${{ matrix.browsers }}-report.html"
 
       - name: Upload HTML Report
         uses: actions/upload-artifact@v4
         with:
           name: Cypress HTML Report ${{ matrix.browsers }}
           path: cypress/reports/${{ matrix.browsers }}
+
+  send-email-report:
+    needs: cypress-run
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Download all reports
+        uses: actions/download-artifact@v4
+        with:
+          path: cypress/reports
+          
+      - name: Send email report
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 587
+          username: ${{ secrets.EMAIL_USERNAME }}
+          password: ${{ secrets.EMAIL_PASSWORD }}
+          subject: "Cypress Test Results - ${{ github.event_name }}"
+          to: ${{ secrets.EMAIL_RECIPIENT }}
+          from: ${{ secrets.EMAIL_USERNAME }}
+          body: |
+            Hello,
+            
+            Cypress tests have completed for the TMS Admin application.
+            
+            Test Results Summary:
+            - Repository: ${{ github.repository }}
+            - Branch: ${{ github.ref_name }}
+            - Commit: ${{ github.sha }}
+            - Triggered by: ${{ github.event_name }}
+            - Status: ${{ needs.cypress-run.result }}
+            
+            Please find the test reports attached.
+            
+            Best regards,
+            GitHub Actions Bot
+          attachments: cypress/reports/**/*.html
 
