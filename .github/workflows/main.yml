@@ -9,7 +9,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        browsers: [chrome, firefox, edge, safari]
+        browsers: [chrome, firefox, edge, electron]
 
     steps:
       - name: Checkout
@@ -26,13 +26,23 @@ jobs:
       - name: Cypress run in ${{ matrix.browsers }}
         uses: cypress-io/github-action@v6
         with:
-          browser: ${{ matrix.browsers }}
           command: npx cypress run --browser ${{ matrix.browsers }} --reporter-options reportDir=cypress/reports/${{ matrix.browsers }}
+        continue-on-error: true
 
       - name: Merge Mochawesome Reports
-        run: npx mochawesome-merge cypress/reports/${{ matrix.browsers }}/*.json > cypress/reports/${{ matrix.browsers }}/merged-reports.json
+        if: always()
+        run: |
+          if ls cypress/reports/${{ matrix.browsers }}/*.json 1> /dev/null 2>&1; then
+            echo "Merging reports for ${{ matrix.browsers }}"
+            npx mochawesome-merge cypress/reports/${{ matrix.browsers }}/*.json > cypress/reports/${{ matrix.browsers }}/merged-reports.json
+          else
+            echo "No json reports found for ${{ matrix.browsers }}. Creating an empty report."
+            mkdir -p cypress/reports/${{ matrix.browsers }}
+            echo '{"stats": {"suites": 0, "tests": 0, "passes": 0, "pending": 0, "failures": 0, "start": "'$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")'", "end": "'$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")'", "duration": 0}, "results": [], "meta": {"information": "No tests were executed or reports found for this browser."}}' > cypress/reports/${{ matrix.browsers }}/merged-reports.json
+          fi
 
       - name: Generate HTML Reports
+        if: always()
         run: npx marge cypress/reports/${{ matrix.browsers }}/merged-reports.json --reportDir cypress/reports/${{ matrix.browsers }} -f "${{ matrix.browsers }}-report.html"
 
       - name: Upload HTML Report
@@ -52,6 +62,63 @@ jobs:
         with:
           path: cypress/reports
           
+      - name: Generate Test Summary
+        id: test-summary
+        run: |
+          SUMMARY_HEADER="Here is a summary of the test results by browser:"
+          SUMMARY_DETAILS=""
+          TOTAL_TESTS=0
+          TOTAL_PASSES=0
+          TOTAL_FAILURES=0
+          TOTAL_PENDING=0
+          TOTAL_DURATION_MS=0
+          REPORTS=$(find cypress/reports -path "*/merged-reports.json")
+          if [ -z "$REPORTS" ]; then
+            SUMMARY_DETAILS="No test reports were found to generate a summary."
+          else
+            for report in $REPORTS; do
+              BROWSER=$(echo "$report" | sed -n 's|cypress/reports/Cypress HTML Report \\(.*\\)/merged-reports.json|\1|p' | awk '{print toupper(substr($0,1,1))substr($0,2)}')
+              STATS=$(jq .stats "$report")
+              if [ "$(echo "$STATS" | jq '.tests')" == "null" ] || [ "$(echo "$STATS" | jq '.tests')" == "0" ]; then
+                SUMMARY_DETAILS="${SUMMARY_DETAILS}**Browser: $BROWSER**\n - No tests were executed.\n\n"
+                continue
+              fi
+              TESTS=$(echo "$STATS" | jq .tests)
+              PASSES=$(echo "$STATS" | jq .passes)
+              FAILURES=$(echo "$STATS" | jq .failures)
+              PENDING=$(echo "$STATS" | jq .pending)
+              DURATION_MS=$(echo "$STATS" | jq .duration)
+              TOTAL_TESTS=$((TOTAL_TESTS + TESTS))
+              TOTAL_PASSES=$((TOTAL_PASSES + PASSES))
+              TOTAL_FAILURES=$((TOTAL_FAILURES + FAILURES))
+              TOTAL_PENDING=$((TOTAL_PENDING + PENDING))
+              TOTAL_DURATION_MS=$((TOTAL_DURATION_MS + DURATION_MS))
+              DURATION_S=$((DURATION_MS / 1000))
+              DURATION_M=$((DURATION_S / 60))
+              DURATION_S_REM=$((DURATION_S % 60))
+              SUMMARY_DETAILS+="**Browser: $BROWSER**\n"
+              SUMMARY_DETAILS+=" - Tests: $TESTS\n"
+              SUMMARY_DETAILS+=" - Passes: $PASSES\n"
+              SUMMARY_DETAILS+=" - Failures: $FAILURES\n"
+              SUMMARY_DETAILS+=" - Pending: $PENDING\n"
+              SUMMARY_DETAILS+=" - Duration: ${DURATION_M}m ${DURATION_S_REM}s\n\n"
+            done
+            TOTAL_DURATION_S=$((TOTAL_DURATION_MS / 1000))
+            TOTAL_DURATION_M=$((TOTAL_DURATION_S / 60))
+            TOTAL_DURATION_S_REM=$((TOTAL_DURATION_S % 60))
+            TOTAL_SUMMARY="**Total Summary**\n"
+            TOTAL_SUMMARY+=" - Total Tests: $TOTAL_TESTS\n"
+            TOTAL_SUMMARY+=" - Total Passes: $TOTAL_PASSES\n"
+            TOTAL_SUMMARY+=" - Total Failures: $TOTAL_FAILURES\n"
+            TOTAL_SUMMARY+=" - Total Pending: $TOTAL_PENDING\n"
+            TOTAL_SUMMARY+=" - Total Duration: ${TOTAL_DURATION_M}m ${TOTAL_DURATION_S_REM}s\n"
+            SUMMARY_DETAILS+="$TOTAL_SUMMARY"
+          fi
+          FULL_SUMMARY="${SUMMARY_HEADER}\n\n${SUMMARY_DETAILS}"
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$FULL_SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
       - name: Send email report
         uses: dawidd6/action-send-mail@v3
         with:
@@ -59,15 +126,17 @@ jobs:
           server_port: 587
           username: ${{ secrets.EMAIL_USERNAME }}
           password: ${{ secrets.EMAIL_PASSWORD }}
-          subject: "Cypress Test Results - ${{ github.event_name }}"
+          subject: "TMS Admin Automation Test Results - ${{ github.event_name }}"
           to: ${{ secrets.EMAIL_RECIPIENT }}
           from: ${{ secrets.EMAIL_USERNAME }}
           body: |
             Hello,
             
-            Cypress tests have completed for the TMS Admin application.
+            Test automation has completed for the TMS Admin application.
+
+            ${{ steps.test-summary.outputs.summary }}
             
-            Test Results Summary:
+            Here are the run details:
             - Repository: ${{ github.repository }}
             - Branch: ${{ github.ref_name }}
             - Commit: ${{ github.sha }}
@@ -77,6 +146,6 @@ jobs:
             Please find the test reports attached.
             
             Best regards,
-            GitHub Actions Bot
+            Blusalt QA Team
           attachments: cypress/reports/**/*.html
 

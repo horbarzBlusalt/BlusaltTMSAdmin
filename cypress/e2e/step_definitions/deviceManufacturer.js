@@ -8,6 +8,8 @@ When("users navigate into the device manufacturer page", () => {
     dvmPage.verifyDeviceManufacturerPage()
 });
 
+
+
 When("I view the add device manufacturer form", () => {
     // The form should be visible by default
     dvmPage.elements.modalTitle().should('be.visible');

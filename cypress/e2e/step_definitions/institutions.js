@@ -49,6 +49,10 @@ When('users enter the admin details', () => {
     instPage.enterAdminProfileDetails(firstName,lastName, businessEmail,phoneNumber)
 })
 
+When('users select the {string} organization type', (institutionType) => {
+    instPage.selectOrganizationType(institutionType)
+})
+
 When('users enter business profile details', () => {
     instPage.enterBusinessProfileDetails(bizName, phoneNumber, businessEmail, addressOne, addressTwo)
 })

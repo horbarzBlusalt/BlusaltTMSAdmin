@@ -8,7 +8,7 @@ Feature: Institution Management
         When users navigate into organization module
         Then users can view all institutions
 
-    @skip
+    
     Scenario: Test to ensure users can carry out search and filter operations
         When users navigate into organization module
         Then users can search
@@ -23,10 +23,11 @@ Feature: Institution Management
         |institution_name|institution_email|
         |proverb|proverb|
 
-    @only
+    
     Scenario: Test to ensure users can add new institution
         When users navigate into organization module
         When users click on the add new institution button
+        When users select the "Terminal Owner" organization type
         When users enter the admin details
         When users enter business profile details
         When users click on save button
@@ -59,7 +60,7 @@ Feature: Institution Management
         |institution_name|institution_email|
         |jopsola|jopesola|
     
-    @skip
+  
     Scenario: Test to ensure that users can onboard a new sub-institution successfully
         When users visit the generated onboarding link
         When users provides matching passwords

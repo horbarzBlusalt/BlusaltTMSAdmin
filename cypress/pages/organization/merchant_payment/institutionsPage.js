@@ -157,6 +157,11 @@ export class institutionsPage{
         utilities.getLinkFromEmail(instEmail)
     }
 
+    selectOrganizationType(institutionType){
+        cy.get('.p-2').should('be.visible').contains(institutionType).click()
+        cy.get('button.btn--secondary').contains('Continue').click()
+    }
+
     enterAdminProfileDetails(firstName, lastName, email, phoneNumber){
         cy.contains("Admin Contact")
         this.elements.firstNameInput().scrollIntoView().type(firstName, {force:true});
